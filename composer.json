@@ -1,0 +1,21 @@
+{
+    "name": "fucoso/Curl",
+    "description": "A complete Curl object oriented wrapper, with basic use cases built in.",
+    "license": "MIT",
+    "keywords": ["curl"],
+    "authors": [
+        {
+            "name": "Syed Haider Abbas",
+            "email": "contact@haiderabbas.me"
+        }
+    ],
+    "require": {},
+    "require-dev": {
+        "phpunit/phpunit": "4.0.*"
+    },
+    "autoload": {
+        "psr-4": {
+            "Fucoso\\Utils\\Curl\\": "src"
+        }
+    }
+}
