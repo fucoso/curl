@@ -1,5 +1,5 @@
 {
-    "name": "fucoso/Curl",
+    "name": "fucoso/curl",
     "description": "A complete Curl object oriented wrapper, with basic use cases built in.",
     "license": "MIT",
     "keywords": ["curl"],
@@ -15,7 +15,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Fucoso\\Utils\\Curl\\": "src"
+            "Fucoso\\Curl\\": "src"
         }
     }
 }
