@@ -7,7 +7,7 @@ use Fucoso\Curl\Actions\Input\File;
 use Fucoso\Curl\Curl;
 use Fucoso\Curl\CurlParallel;
 
-class CurlActionDownloadParallel extends CurlAction
+class CurlActionDownloadManyInParallel extends CurlAction
 {
 
     /**
