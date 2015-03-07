@@ -2,6 +2,7 @@
 
 namespace Fucoso\Curl\Actions;
 
+use Closure;
 use Fucoso\Curl\Curl;
 
 class CurlAction
@@ -38,10 +39,11 @@ class CurlAction
      */
     private $curlTimeout = 30;
 
-    public function __construct()
-    {
-
-    }
+    /**
+     *
+     * @var Closure
+     */
+    private $logMessageCall;
 
     public function getCookiePath()
     {
@@ -61,6 +63,11 @@ class CurlAction
     public function getCurlTimeout()
     {
         return $this->curlTimeout;
+    }
+
+    public function getlogMessageCall()
+    {
+        return $this->logMessageCall;
     }
 
     public function setCookiePath($cookiePath)
@@ -87,13 +94,19 @@ class CurlAction
         return $this;
     }
 
+    public function setLogMessageCall(Closure $outputCall)
+    {
+        $this->logMessageCall = $outputCall;
+        return $this;
+    }
+
     /**
      * Send a HEAD request to the given URL to get the information only for the url.
      *
      * @param string $url
      * @return boolean|null
      */
-    public static function infoFromURL(&$url)
+    public function infoFromURL(&$url)
     {
 
         $curl = new Curl($url);
@@ -222,7 +235,7 @@ class CurlAction
      * @param string $destination
      * @return boolean
      */
-    protected function _getLocalFileSize($destination)
+    protected function getLocalFileSize($destination)
     {
         $fileHandle = fopen($destination, 'r+');
         if ($fileHandle !== false) {
@@ -236,6 +249,14 @@ class CurlAction
             }
         } else {
             return false;
+        }
+    }
+
+    protected function logMessage($message)
+    {
+        if (is_callable($this->getlogMessageCall())) {
+            $outputCall = $this->getlogMessageCall();
+            $outputCall($message);
         }
     }
 

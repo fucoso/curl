@@ -3,6 +3,7 @@
 namespace Fucoso\Curl\Actions;
 
 use Exception;
+use Fucoso\Curl\Actions\Input\File;
 use Fucoso\Curl\Curl;
 use Fucoso\Curl\Exceptions\FileSizeException;
 
@@ -12,38 +13,37 @@ class CurlActionDownload extends CurlAction
     /**
      * Downloads the given url to the given destination. Tries to resume download if file already exists.
      *
-     * @param string $destination
-     * @param string $url
-     * @param boolean $overWrite
+     * @param File $downloadFile
      * @return boolean|null
      */
-    public function download($destination, &$url, $overWrite = false)
+    public function download(File $downloadFile)
     {
-        $urlInfo = $this->infoFromURL($url);
+
+        $urlInfo = $this->infoFromURL($downloadFile->getUrl());
 
         if ($urlInfo->isSuccessful()) {
 
             $fileSize = null;
-            if (file_exists($destination)) {
-                $fileSize = $this->_getLocalFileSize($destination);
-                if (!$overWrite && $fileSize >= $urlInfo->info->CONTENT_LENGTH_DOWNLOAD) {
+            if (file_exists($downloadFile->getDestination())) {
+                $fileSize = $this->_getLocalFileSize($downloadFile->getDestination());
+                if (!$downloadFile->getOverwrite() && $fileSize >= $urlInfo->info->CONTENT_LENGTH_DOWNLOAD) {
                     return true;
                 }
             }
 
-            $curl = new Curl($url);
+            $curl = new Curl($downloadFile->getUrl());
             $curl->options->SSL_VERIFYPEER = false;
             $curl->options->FOLLOWLOCATION = true;
             $curl->options->RETURNTRANSFER = false;
             $curl->options->CONNECTTIMEOUT = $this->connectTimeout;
             $curl->options->TIMEOUT = $this->curlTimeout;
 
-            if (!$overWrite && file_exists($destination) && $urlInfo->headers->acceptRanges == 'bytes') {
-                $curl->options->FILE = fopen($destination, 'a');
+            if (!$downloadFile->getOverwrite() && file_exists($downloadFile->getDestination()) && $urlInfo->headers->acceptRanges == 'bytes') {
+                $curl->options->FILE = fopen($downloadFile->getDestination(), 'a');
                 $curl->options->RESUME_FROM = $fileSize;
-                //Console::write("Resuming From {$fileSize} Bytes");
+                $this->output("Resuming From {$fileSize} Bytes");
             } else {
-                $curl->options->FILE = fopen($destination, 'w');
+                $curl->options->FILE = fopen($downloadFile->getDestination(), 'w');
             }
 
             if ($this->cookiePath && $this->cookieFile) {
@@ -58,11 +58,11 @@ class CurlActionDownload extends CurlAction
             $curl->options->HTTPHEADER = $headers;
 
             $curl->execute();
-            $url = $curl->effectiveURL();
+            $downloadFile->getUrl() = $curl->effectiveURL();
             $curl->close();
 
             if ($curl->isSuccessful()) {
-                $newFileSize = $this->_getLocalFileSize($destination);
+                $newFileSize = $this->_getLocalFileSize($downloadFile->getDestination());
                 if ($urlInfo->info->CONTENT_LENGTH_DOWNLOAD == $newFileSize) {
                     return true;
                 } else {

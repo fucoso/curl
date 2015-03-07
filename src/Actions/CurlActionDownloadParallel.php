@@ -3,6 +3,7 @@
 namespace Fucoso\Curl\Actions;
 
 use Exception;
+use Fucoso\Curl\Actions\Input\File;
 use Fucoso\Curl\Curl;
 use Fucoso\Curl\CurlParallel;
 use Fucoso\Curl\Exceptions\FileSizeException;
@@ -13,35 +14,33 @@ class CurlActionDownloadParallel extends CurlAction
     /**
      * Downloads the given url to the given destination. Tries to resume download if file already exists.
      *
-     * @param string $destination
-     * @param string $url
+     * @param File destination
      * @param float $chunkSizeMegaBytes
-     * @param boolean $overWrite
      * @return boolean|null
      */
-    public function downloadParallelFromURL($destination, $url, $chunkSizeMegaBytes = 500, $overWrite = false)
+    public function download(File $downloadFile, $chunkSizeMegaBytes = 500)
     {
-        $oldURl = $url;
-        $urlInfo = static::infoFromURL($url);
+        $oldURl = $downloadFile->getUrl();
+        $urlInfo = static::infoFromURL($downloadFile->getUrl());
 
-        if($oldURl != $urlInfo->effectiveURL()){
-            $url = $urlInfo->effectiveURL();
-            $urlInfo = static::infoFromURL($url);
+        if ($oldURl != $urlInfo->effectiveURL()) {
+            $downloadFile->getUrl() = $urlInfo->effectiveURL();
+            $urlInfo = static::infoFromURL($downloadFile->getUrl());
         }
 
         if ($urlInfo->isSuccessful()) {
-            //Console::write("File Size: {$urlInfo->info->CONTENT_LENGTH_DOWNLOAD} Bytes");
+            $this->output("File Size: {$urlInfo->info->CONTENT_LENGTH_DOWNLOAD} Bytes");
             $fileSize = null;
-            if (file_exists($destination)) {
-                $fileSize = $this->_getLocalFileSize($destination);
-                if (!$overWrite && $fileSize >= $urlInfo->info->CONTENT_LENGTH_DOWNLOAD) {
+            if (file_exists($downloadFile->getDestination())) {
+                $fileSize = $this->_getLocalFileSize($downloadFile->getDestination());
+                if (!$downloadFile->getOverwrite() && $fileSize >= $urlInfo->info->CONTENT_LENGTH_DOWNLOAD) {
 
                     $possibleChunks = (int) ($urlInfo->info->CONTENT_LENGTH_DOWNLOAD / ($chunkSizeMegaBytes * 1024 * 1024));
                     //Console::increaseIndent();
                     for ($i = 1; $i <= $possibleChunks + 10; $i++) {
-                        $chunkFile = $destination . ".{$i}.xpart";
+                        $chunkFile = $downloadFile->getDestination() . ".{$i}.xpart";
                         if (file_exists($chunkFile)) {
-                            //Console::write("Deleting {$chunkFile} - Download was verified");
+                            $this->output("Deleting {$chunkFile} - Download was verified");
                             unlink($chunkFile);
                         } else {
                             break;
@@ -79,10 +78,10 @@ class CurlActionDownloadParallel extends CurlAction
                     $chunkEnd = $urlInfo->info->CONTENT_LENGTH_DOWNLOAD;
                 }
 
-                $file = $destination . ".{$i}.xpart";
+                $file = $downloadFile->getDestination() . ".{$i}.xpart";
 
 
-                $curl = new Curl($url);
+                $curl = new Curl($downloadFile->getUrl());
                 $curl->options->SSL_VERIFYPEER = false;
                 $curl->options->FOLLOWLOCATION = true;
                 $curl->options->RETURNTRANSFER = false;
@@ -91,21 +90,21 @@ class CurlActionDownloadParallel extends CurlAction
 
                 $curl->setDestinationFile($file);
 
-                if (!$overWrite && file_exists($file) && $urlInfo->headers->acceptRanges == 'bytes') {
+                if (!$downloadFile->getOverwrite() && file_exists($file) && $urlInfo->headers->acceptRanges == 'bytes') {
                     $resumeChunkSize = $this->_getLocalFileSize($file);
                     if ($chunkStart + $resumeChunkSize >= $chunkEnd) {
-                        ////Console::write("Skipping {$file} - Already Downloaded");
+                        //$this->output("Skipping {$file} - Already Downloaded");
                         $parallelCurls[] = $file;
                         continue;
                     }
                     $chunkStart = $chunkStart + $resumeChunkSize;
                     $curl->options->FILE = fopen($file, 'a');
                     $curl->options->RANGE = "{$chunkStart}-{$chunkEnd}";
-                    //Console::write("Resuming {$file} From {$chunkStart} To {$chunkEnd} Bytes");
+                    $this->output("Resuming {$file} From {$chunkStart} To {$chunkEnd} Bytes");
                 } else {
                     $curl->options->FILE = fopen($file, 'a');
                     $curl->options->RANGE = "{$chunkStart}-{$chunkEnd}";
-                    //Console::write("Downloading {$file} From {$chunkStart} To {$chunkEnd} Bytes");
+                    $this->output("Downloading {$file} From {$chunkStart} To {$chunkEnd} Bytes");
                 }
 
                 if ($this->cookiePath && $this->cookieFile) {
@@ -141,8 +140,8 @@ class CurlActionDownloadParallel extends CurlAction
                 //$parallel->close();
             }
 
-            if (file_exists($destination)) {
-                unlink($destination);
+            if (file_exists($downloadFile->getDestination())) {
+                unlink($downloadFile->getDestination());
             }
 
             foreach ($parallelCurls as $curl) {
@@ -150,11 +149,11 @@ class CurlActionDownloadParallel extends CurlAction
                 if ($curl instanceof Curl) {
                     $readFile = $curl->getDestinationFile();
                 }
-                file_put_contents($destination, file_get_contents($readFile), FILE_APPEND);
+                file_put_contents($downloadFile->getDestination(), file_get_contents($readFile), FILE_APPEND);
             }
 
-            $newFileSize = $this->_getLocalFileSize($destination);
-            //Console::write("Downloaded File Size: {$newFileSize} Bytes");
+            $newFileSize = $this->_getLocalFileSize($downloadFile->getDestination());
+            $this->output("Downloaded File Size: {$newFileSize} Bytes");
             if ($urlInfo->info->CONTENT_LENGTH_DOWNLOAD == $newFileSize) {
                 foreach ($parallelCurls as $curl) {
                     if ($curl instanceof Curl) {
@@ -165,8 +164,6 @@ class CurlActionDownloadParallel extends CurlAction
                 }
                 return true;
             } else {
-                ////Console::write("File Downloaded, Failed to verify file size.");
-                //return false;
                 throw new FileSizeException("File Downloaded, Failed to verify file size.");
             }
         } else {
