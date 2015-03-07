@@ -22,11 +22,11 @@ class CurlActionDownloadParallel extends CurlAction
     public function downloadParallelFromURL($destination, $url, $chunkSizeMegaBytes = 500, $overWrite = false)
     {
         $oldURl = $url;
-        $urlInfo = static::infoFromURL($url, $cookieFile, $connectTimeout, $curlTimeout);
+        $urlInfo = static::infoFromURL($url);
 
         if($oldURl != $urlInfo->effectiveURL()){
             $url = $urlInfo->effectiveURL();
-            $urlInfo = static::infoFromURL($url, $cookieFile, $connectTimeout, $curlTimeout);
+            $urlInfo = static::infoFromURL($url);
         }
 
         if ($urlInfo->isSuccessful()) {
