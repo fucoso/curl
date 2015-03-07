@@ -1,11 +1,11 @@
 <?php
 
-namespace Fucoso\Utils\Curl\Actions;
+namespace Fucoso\Curl\Actions;
 
 use Exception;
-use Fucoso\Utils\Curl\Curl;
-use Fucoso\Utils\Curl\CurlParallel;
-use Fucoso\Utils\Curl\Exceptions\FileSizeException;
+use Fucoso\Curl\Curl;
+use Fucoso\Curl\CurlParallel;
+use Fucoso\Curl\Exceptions\FileSizeException;
 
 class CurlActionDownloadParallel extends CurlAction
 {

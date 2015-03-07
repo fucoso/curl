@@ -1,6 +1,6 @@
 <?php
 
-namespace Fucoso\Utils\Curl;
+namespace Fucoso\Curl;
 
 use Exception;
 

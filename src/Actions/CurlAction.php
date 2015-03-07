@@ -1,8 +1,8 @@
 <?php
 
-namespace Fucoso\Utils\Curl\Actions;
+namespace Fucoso\Curl\Actions;
 
-use Fucoso\Utils\Curl\Curl;
+use Fucoso\Curl\Curl;
 
 class CurlAction
 {
