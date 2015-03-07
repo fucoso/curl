@@ -21,11 +21,11 @@ class CurlActionDownloadParallel extends CurlAction
     public function download(File $downloadFile, $chunkSizeMegaBytes = 500)
     {
         $oldURl = $downloadFile->getUrl();
-        $urlInfo = static::infoFromURL($downloadFile->getUrl());
+        $urlInfo = $this->infoFromURL($downloadFile->getUrl());
 
         if ($oldURl != $urlInfo->effectiveURL()) {
             $downloadFile->getUrl() = $urlInfo->effectiveURL();
-            $urlInfo = static::infoFromURL($downloadFile->getUrl());
+            $urlInfo = $this->infoFromURL($downloadFile->getUrl());
         }
 
         if ($urlInfo->isSuccessful()) {

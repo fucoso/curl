@@ -2,6 +2,8 @@
 
 namespace Fucoso\Curl\Actions\Input;
 
+use Fucoso\Curl\Curl;
+
 class File
 {
 
@@ -22,6 +24,18 @@ class File
      * @var boolean
      */
     private $overwrite = false;
+
+    /**
+     *
+     * @var Curl
+     */
+    private $curl;
+
+    /**
+     *
+     * @var Curl
+     */
+    private $info;
 
     public function __construct($url, $destination)
     {
@@ -44,6 +58,16 @@ class File
         return $this->overwrite;
     }
 
+    public function getCurl()
+    {
+        return $this->curl;
+    }
+
+    public function getInfo()
+    {
+        return $this->info;
+    }
+
     public function setUrl($url)
     {
         $this->url = $url;
@@ -59,6 +83,18 @@ class File
     public function setOverwrite($overwrite)
     {
         $this->overwrite = $overwrite;
+        return $this;
+    }
+
+    public function setCurl(Curl $curl)
+    {
+        $this->curl = $curl;
+        return $this;
+    }
+
+    public function setInfo(Curl $info)
+    {
+        $this->info = $info;
         return $this;
     }
 
