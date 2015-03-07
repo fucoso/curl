@@ -21,7 +21,13 @@ class CurlActionDownloadParallel extends CurlAction
      */
     public function downloadParallelFromURL($destination, $url, $chunkSizeMegaBytes = 500, $overWrite = false)
     {
-        $urlInfo = $this->infoFromURL($url);
+        $oldURl = $url;
+        $urlInfo = self::infoFromURL($url, $cookieFile, $connectTimeout, $curlTimeout);
+
+        if($oldURl != $urlInfo->effectiveURL()){
+            $url = $urlInfo->effectiveURL();
+            $urlInfo = self::infoFromURL($url, $cookieFile, $connectTimeout, $curlTimeout);
+        }
 
         if ($urlInfo->isSuccessful()) {
             //Console::write("File Size: {$urlInfo->info->CONTENT_LENGTH_DOWNLOAD} Bytes");
